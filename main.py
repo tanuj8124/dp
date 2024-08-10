@@ -9,7 +9,7 @@ import logging
 
 
 logging.basicConfig(level=logging.INFO)
-pr= PolynomialFeatures(2)
+pr= PolynomialFeatures(4)
 
 # Load the trained model
 model = joblib.load("dp.joblib")
