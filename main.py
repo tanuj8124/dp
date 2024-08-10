@@ -1,38 +1,42 @@
-from typing import Optional
-from fastapi import FastAPI
-from pydantic import BaseModel
-import joblib
+
 import uvicorn
+
+from fastapi import FastAPI
+import joblib 
+
 from sklearn.preprocessing import PolynomialFeatures
-pr= PolynomialFeatures(4)
+import logging
 
 
+logging.basicConfig(level=logging.INFO)
+pr= PolynomialFeatures(2)
 
 # Load the trained model
-model = joblib.load("depth_predict.joblib")
+model = joblib.load("dp.joblib")
 
-# Define the input data structure
-class InputData(BaseModel):
-    param1: float
-    param2: float
-    param3: float
-
-# Create FastAPI instance
+# Initialize FastAPI
 app = FastAPI()
 
-@app.get('/')
-def index():
-    return{'message':'api loaded'}
 
-# Define the prediction endpoint
-@app.post("/predict/")
-async def predict(data: InputData):
-    x_test_poly= pr.fit_transform([[data.param1, data.param2, data.param3]])
-    prediction = model.predict([x_test_poly])
-    return {"prediction": prediction[0]}
+# Define a GET method that takes the three parameters as query parameters
+@app.get("/predict/")
 
-if __name__=='__main__':
-    uvicorn.run(app, host='127.0.0.1', port=8000)
 
-# To run the server, use the command:
-# uvicorn api:app --reload
+
+def predict(temperature: float, precipitation: float, month: int):
+    try:
+        logging.info(f"Received inputs - Temperature: {temperature}, Precipitation: {precipitation}, Month: {month}")
+        
+        poly= pr.fit_transform([[(temperature),(precipitation),(month)]])
+        prediction = model.predict(poly)
+        logging.info(f"Prediction result: {prediction}")
+        return {"prediction": prediction[0]}
+    except Exception as e:
+        logging.error(f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# Run the server using: uvicorn filename:app --reload
