@@ -6,7 +6,7 @@ import joblib
 
 from sklearn.preprocessing import PolynomialFeatures
 import logging
-
+from fastapi.middleware.cors import CORSMiddleware
 
 logging.basicConfig(level=logging.INFO)
 pr= PolynomialFeatures(4)
@@ -16,6 +16,16 @@ model = joblib.load("dp.joblib")
 
 # Initialize FastAPI
 app = FastAPI()
+origins = ["*"]  # Replace with specific origins for security in production
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],   
+
+)
 
 
 # Define a GET method that takes the three parameters as query parameters
